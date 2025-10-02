@@ -43,3 +43,31 @@ describe("GET /api/v1/branches/:id", () => {
     expect(res.body).toHaveProperty("error");
   });
 });
+
+describe("POST /api/v1/branches", () => {
+  it("should create a new branch", async () => {
+    // Arrange
+    const newBranch = {
+      name: "Test Branch",
+      address: "123 Test St, City, Province",
+      phone: "123-456-7890",
+    };
+    
+    // Act
+    const res = await request(app).post("/api/v1/branches").send(newBranch);
+    
+    // Assert
+    expect(res.statusCode).toBe(201);
+    expect(res.body).toMatchObject(newBranch);
+    expect(res.body).toHaveProperty("id");
+  });
+
+  it("should return 400 if required fields are missing", async () => {
+    // Act
+    const res = await request(app).post("/api/v1/branches").send({});
+    
+    // Assert
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toHaveProperty("error");
+  });
+});

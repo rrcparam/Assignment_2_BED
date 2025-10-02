@@ -15,3 +15,11 @@ export function addBranch(branchData: Omit<Branch, "id">): Branch {
   return newBranch;
 }
 
+export function updateBranch(id: number, updatedData: Partial<Branch>): Branch | null {
+  const index = branches.findIndex(branch => branch.id === id);
+  if (index === -1) return null;
+
+  branches[index] = { ...branches[index], ...updatedData };
+  return branches[index];
+}
+
