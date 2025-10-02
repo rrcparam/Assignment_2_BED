@@ -16,6 +16,8 @@ export const getEmployeeById = (req: Request, res: Response) => {
 };
 
 export const createEmployee = (req: Request, res: Response) => {
+
+  //Create new employee
   const newEmployee: Employee = {
     id: employees.length + 1,
     ...req.body,
@@ -24,6 +26,7 @@ export const createEmployee = (req: Request, res: Response) => {
   res.status(201).json(newEmployee);
 };
 
+// Update an existing employee
 export const updateEmployee = (req: Request, res: Response) => {
   const id = Number(req.params.id);
   const index = employees.findIndex((e) => e.id === id);
@@ -33,6 +36,8 @@ export const updateEmployee = (req: Request, res: Response) => {
   res.json(employees[index]);
 };
 
+
+// Delete an employee by their ID
 export const deleteEmployee = (req: Request, res: Response) => {
   const id = Number(req.params.id);
   const index = employees.findIndex((e) => e.id === id);
