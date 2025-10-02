@@ -5,6 +5,7 @@ import {
   getBranchById,
   updateBranch,
   addBranch,
+  deleteBranch,
 
 } from "../services/branchService";
 
@@ -56,6 +57,23 @@ router.put("/:id", (req, res) => {
   }
   res.json(updatedBranch);
 });
+
+// DELETE branch
+router.delete("/:id", (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) {
+    return res.status(400).json({ error: "Invalid branch ID" });
+  }
+
+  const deleted = deleteBranch(id);
+  if (!deleted) {
+    return res.status(404).json({ error: "Branch not found" });
+  }
+  res.status(200).json({ message: "Branch deleted" });
+});
+
+export default router;
+
 
 
 

@@ -23,3 +23,12 @@ export function updateBranch(id: number, updatedData: Partial<Branch>): Branch |
   return branches[index];
 }
 
+export function deleteBranch(id: number): boolean {
+  const index = branches.findIndex(branch => branch.id === id);
+  if (index === -1) return false;
+
+  branches.splice(index, 1);
+  return true;
+}
+
+
