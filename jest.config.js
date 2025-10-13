@@ -8,5 +8,7 @@ module.exports = {
   moduleDirectories: ["node_modules", "src"],
   transform: {
     ...tsJestTransformCfg,
+     preset: "ts-jest",
+    setupFilesAfterEnv: ["<rootDir>/test/jest.setup.ts"],
   },
 };
