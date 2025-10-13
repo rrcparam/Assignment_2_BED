@@ -1,48 +1,63 @@
-
-
 import { Request, Response } from "express";
-import { employees, Employee } from "../../../data/employees";
+import * as employeeService from "../services/employeeService";
 
-export const getAllEmployees = (_req: Request, res: Response) => {
-  res.json(employees);
+export const getAllEmployees = (_req: Request, res: Response): void => {
+  const employees = employeeService.getAllEmployees();
+  res.status(200).json(employees); 
 };
 
-export const getEmployeeById = (req: Request, res: Response) => {
+export const getEmployeeById = (req: Request, res: Response): void => {
   const id = Number(req.params.id);
-  const employee = employees.find((e) => e.id === id);
+  const employee = employeeService.getEmployeeById(id);
 
-  if (!employee) return res.status(404).json({ message: "Employee not found" });
-  res.json(employee);
+  if (!employee) {
+    res.status(404).json({ message: "Employee not found" });
+    return;
+  }
+
+  res.status(200).json(employee); 
 };
 
-export const createEmployee = (req: Request, res: Response) => {
+export const createEmployee = (req: Request, res: Response): void => {
+  const { name, position, department, email, phone, branchId } = req.body;
 
-  //Create new employee
-  const newEmployee: Employee = {
-    id: employees.length + 1,
-    ...req.body,
-  };
-  employees.push(newEmployee);
+  if (!name || !position || !department || !email || !phone || !branchId) {
+    res.status(400).json({ error: "Missing required fields" });
+    return;
+  }
+
+  const newEmployee = employeeService.addEmployee({
+    name,
+    position,
+    department,
+    email,
+    phone,
+    branchId,
+  });
+
   res.status(201).json(newEmployee);
 };
 
-// Update an existing employee
-export const updateEmployee = (req: Request, res: Response) => {
-  const id = Number(req.params.id);
-  const index = employees.findIndex((e) => e.id === id);
-  if (index === -1) return res.status(404).json({ message: "Employee not found" });
+export const updateEmployee = (req: Request, res: Response): void => {
+  const id: number = Number(req.params.id);
+  const updatedEmployee = employeeService.updateEmployee(id, req.body);
 
-  employees[index] = { ...employees[index], ...req.body };
-  res.json(employees[index]);
+  if (!updatedEmployee) {
+    res.status(404).json({ message: "Employee not found" });
+    return;
+  }
+
+  res.status(200).json(updatedEmployee); 
 };
 
+export const deleteEmployee = (req: Request, res: Response): void => {
+  const id: number = Number(req.params.id);
+  const deleted = employeeService.deleteEmployee(id);
 
-// Delete an employee by their ID
-export const deleteEmployee = (req: Request, res: Response) => {
-  const id = Number(req.params.id);
-  const index = employees.findIndex((e) => e.id === id);
-  if (index === -1) return res.status(404).json({ message: "Employee not found" });
+  if (!deleted) {
+    res.status(404).json({ message: "Employee not found" });
+    return;
+  }
 
-  employees.splice(index, 1);
-  res.json({ message: "Employee deleted successfully" });
+  res.status(200).json({ message: "Employee deleted successfully" });
 };
