@@ -11,7 +11,7 @@ jest.mock("../../config/firebaseConfig", () => ({
     },
 }));
 
-// Reset all mocks after each test
+// Reset all mocks after each  test
 afterEach(() => {
     jest.clearAllMocks();
 });
