@@ -15,5 +15,10 @@ app.use("/api/v1/branches", branchRoutes);
 app.get("/health", (_req: Request, res: Response) => {
   res.status(200).send("Server is healthy");
 });
+import { db } from "../config/firebaseConfig";
+
+db.listCollections().then(collections => {
+  console.log("✅ Firestore connected! Collections:", collections.map(c => c.id));
+});
 
 export default app;
