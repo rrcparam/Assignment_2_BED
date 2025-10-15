@@ -1,37 +1,63 @@
-import { branches, Branch } from "../../../data/branches";
 
-export function getAllBranches(): Branch[] {
-  return branches;
-}
+import {
+  createDocument,
+  getDocuments,
+  getDocumentById,
+  updateDocument,
+  deleteDocument,
+} from "../repositories/firestoreRepository";
+import { Branch } from "../models/branchModel";
 
-export function getBranchById(id: number): Branch | undefined {
-  return branches.find(branch => branch.id === id);
-}
+const COLLECTION_NAME = "branches";
 
-// This function is to Create a new branch
-export function addBranch(branchData: Omit<Branch, "id">): Branch {
-  const newId = branches.length ? Math.max(...branches.map(b => b.id)) + 1 : 1;
-  const newBranch: Branch = { id: newId, ...branchData };
-  branches.push(newBranch);
-  return newBranch;
-}
 
-// Update an existing branch by its ID.
-export function updateBranch(id: number, updatedData: Partial<Branch>): Branch | null {
-  const index = branches.findIndex(branch => branch.id === id);
-  if (index === -1) return null;
+ //Getting  all the branches
+ 
+export const getAllBranches = async (): Promise<Branch[]> => {
+  const snapshot = await getDocuments(COLLECTION_NAME);
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Branch[];
+};
 
-  branches[index] = { ...branches[index], ...updatedData };
-  return branches[index];
-}
 
-// This function for Delete a branch by its ID
-export function deleteBranch(id: number): boolean {
-  const index = branches.findIndex(branch => branch.id === id);
-  if (index === -1) return false;
+ // to Get branch by ID
+ 
+export const getBranchById = async (id: string): Promise<Branch | null> => {
+  const doc = await getDocumentById(COLLECTION_NAME, id);
+  if (!doc || !doc.exists) return null;
+  return { id: doc.id, ...doc.data() } as Branch;
+};
 
-  branches.splice(index, 1);
+
+ //for  Create a new branch
+ 
+export const createBranch = async (data: Branch): Promise<string> => {
+  
+  const plainData = JSON.parse(JSON.stringify(data));
+
+  const newId = await createDocument(COLLECTION_NAME, plainData);
+  return newId;
+};
+
+
+ // Updating an existing branch
+ 
+export const updateBranch = async (
+  id: string,
+  data: Partial<Branch>
+): Promise<Branch | null> => {
+  const plainData = JSON.parse(JSON.stringify(data)); 
+  await updateDocument(COLLECTION_NAME, id, plainData);
+
+  const updatedDoc = await getDocumentById(COLLECTION_NAME, id);
+  if (!updatedDoc || !updatedDoc.exists) return null;
+
+  return { id: updatedDoc.id, ...updatedDoc.data() } as Branch;
+};
+
+
+ // TO Delete a branch by ID
+ 
+export const deleteBranch = async (id: string): Promise<boolean> => {
+  await deleteDocument(COLLECTION_NAME, id);
   return true;
-}
-
-
+};
