@@ -1,63 +1,106 @@
 import { Request, Response } from "express";
 import * as employeeService from "../services/employeeService";
+import {
+  createEmployeeSchema,
+  updateEmployeeSchema,
+} from "../validation/employeeSchemas";
+import { successResponse, errorResponse } from "../models/responseModel";
 
-export const getAllEmployees = (_req: Request, res: Response): void => {
-  const employees = employeeService.getAllEmployees();
-  res.status(200).json(employees); 
+ //in order to Get all employees
+ 
+export const getAllEmployees = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const employees = await employeeService.getAllEmployees();
+    res.status(200).json(successResponse(employees, "Employees retrieved successfully"));
+  } catch (error) {
+    res.status(500).json(errorResponse("Failed to fetch employees"));
+  }
 };
 
-export const getEmployeeById = (req: Request, res: Response): void => {
-  const id = Number(req.params.id);
-  const employee = employeeService.getEmployeeById(id);
 
-  if (!employee) {
-    res.status(404).json({ message: "Employee not found" });
-    return;
+ // to Get employee by ID
+ 
+export const getEmployeeById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = req.params.id; // Firestore IDs are strings
+    const employee = await employeeService.getEmployeeById(id);
+
+    if (!employee) {
+      res.status(404).json(errorResponse("Employee not found"));
+      return;
+    }
+
+    res.status(200).json(successResponse(employee, "Employee retrieved successfully"));
+  } catch (error) {
+    res.status(500).json(errorResponse("Failed to fetch employee"));
   }
-
-  res.status(200).json(employee); 
 };
 
-export const createEmployee = (req: Request, res: Response): void => {
-  const { name, position, department, email, phone, branchId } = req.body;
 
-  if (!name || !position || !department || !email || !phone || !branchId) {
-    res.status(400).json({ error: "Missing required fields" });
-    return;
+ //Create a new employee
+ 
+export const createEmployee = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { error, value } = createEmployeeSchema.validate(req.body, { abortEarly: false });
+
+    if (error) {
+      res
+        .status(400)
+        .json(errorResponse("Validation failed", error.details.map((d) => d.message).join(", ")));
+      return;
+    }
+
+    const newId = await employeeService.createEmployee(value);
+    res
+      .status(201)
+      .json(successResponse({ id: newId }, "Employee created successfully"));
+  } catch (error) {
+    res.status(500).json(errorResponse("Failed to create employee"));
   }
-
-  const newEmployee = employeeService.addEmployee({
-    name,
-    position,
-    department,
-    email,
-    phone,
-    branchId,
-  });
-
-  res.status(201).json(newEmployee);
 };
 
-export const updateEmployee = (req: Request, res: Response): void => {
-  const id: number = Number(req.params.id);
-  const updatedEmployee = employeeService.updateEmployee(id, req.body);
 
-  if (!updatedEmployee) {
-    res.status(404).json({ message: "Employee not found" });
-    return;
+  // Update an existing employee
+
+export const updateEmployee = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { error, value } = updateEmployeeSchema.validate(req.body, { abortEarly: false });
+
+    if (error) {
+      res
+        .status(400)
+        .json(errorResponse("Validation failed", error.details.map((d) => d.message).join(", ")));
+      return;
+    }
+
+    const updatedEmployee = await employeeService.updateEmployee(req.params.id, value);
+
+    if (!updatedEmployee) {
+      res.status(404).json(errorResponse("Employee not found"));
+      return;
+    }
+
+    res
+      .status(200)
+      .json(successResponse(updatedEmployee, "Employee updated successfully"));
+  } catch (error) {
+    res.status(500).json(errorResponse("Failed to update employee"));
   }
-
-  res.status(200).json(updatedEmployee); 
 };
 
-export const deleteEmployee = (req: Request, res: Response): void => {
-  const id: number = Number(req.params.id);
-  const deleted = employeeService.deleteEmployee(id);
 
-  if (!deleted) {
-    res.status(404).json({ message: "Employee not found" });
-    return;
+ // used to Delete employee by ID
+ 
+export const deleteEmployee = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const success = await employeeService.deleteEmployee(req.params.id);
+    if (!success) {
+      res.status(404).json(errorResponse("Employee not found"));
+      return;
+    }
+
+    res.status(200).json(successResponse(null, "Employee deleted successfully"));
+  } catch (error) {
+    res.status(500).json(errorResponse("Failed to delete employee"));
   }
-
-  res.status(200).json({ message: "Employee deleted successfully" });
 };
