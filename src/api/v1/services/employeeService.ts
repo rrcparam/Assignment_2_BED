@@ -1,39 +1,56 @@
-import { employees, Employee } from "../../../data/employees";
+import {
+  createDocument,
+  getDocuments,
+  getDocumentById,
+  updateDocument,
+  deleteDocument,
+} from "../repositories/firestoreRepository";
+import { Employee } from "../models/employeeModel";
 
-export const getAllEmployees = (): Employee[] => {
-  // Return all employees
-  return employees;
+const COLLECTION_NAME = "employees";
+
+
+ // Getting all employees
+ 
+export const getAllEmployees = async (): Promise<Employee[]> => {
+  const snapshot = await getDocuments(COLLECTION_NAME);
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Employee[];
 };
 
-export const getEmployeeById = (id: number): Employee | undefined => {
-  // Find single employee by ID
-  return employees.find((e) => e.id === id);
+
+ //Getting  employee by ID
+ 
+export const getEmployeeById = async (id: string): Promise<Employee | null> => {
+  const doc = await getDocumentById(COLLECTION_NAME, id);
+  if (!doc || !doc.exists) return null;
+  return { id: doc.id, ...doc.data() } as Employee;
 };
 
-export const addEmployee = (data: Omit<Employee, "id">): Employee => {
-  // Create new employee
-  const newEmployee: Employee = {
-    id: employees.length + 1,
-    ...data,
-  };
-  employees.push(newEmployee);
-  return newEmployee;
+
+// Creating a new employee
+
+export const createEmployee = async (data: Employee): Promise<string> => {
+  const newId = await createDocument(COLLECTION_NAME, data);
+  return newId;
 };
 
-export const updateEmployee = (id: number, updatedData: Partial<Employee>): Employee | null => {
-  // Updating  existing employee
-  const index = employees.findIndex((e) => e.id === id);
-  if (index === -1) return null;
 
-  employees[index] = { ...employees[index], ...updatedData };
-  return employees[index];
+ // For updating an existing employee
+ 
+export const updateEmployee = async (
+  id: string,
+  data: Partial<Employee>
+): Promise<Employee | null> => {
+  await updateDocument(COLLECTION_NAME, id, data);
+  const updatedDoc = await getDocumentById(COLLECTION_NAME, id);
+  if (!updatedDoc || !updatedDoc.exists) return null;
+  return { id: updatedDoc.id, ...updatedDoc.data() } as Employee;
 };
 
-export const deleteEmployee = (id: number): boolean => {
-  // Delete  employee by ID
-  const index = employees.findIndex((e) => e.id === id);
-  if (index === -1) return false;
 
-  employees.splice(index, 1);
+ // to Delete employee by ID
+ 
+export const deleteEmployee = async (id: string): Promise<boolean> => {
+  await deleteDocument(COLLECTION_NAME, id);
   return true;
 };
